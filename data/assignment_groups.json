@@ -1,0 +1,42 @@
+[
+  {
+    "name": "Network Operations",
+    "description": "WAN/LAN, VPN, firewall, DNS, load balancers, site connectivity",
+    "example_issues": ["VPN not connecting", "Site-wide network outage", "Firewall rule request"]
+  },
+  {
+    "name": "Enterprise Applications",
+    "description": "ERP, CRM, HR systems, internal business applications and their integrations",
+    "example_issues": ["SAP login failure", "Salesforce sync errors", "Workday timesheet not loading"]
+  },
+  {
+    "name": "End User Computing",
+    "description": "Laptops, desktops, printers, mobile devices, OS issues, standard software installs",
+    "example_issues": ["Laptop won't boot", "Printer offline", "Outlook crashing on startup"]
+  },
+  {
+    "name": "Database Administration",
+    "description": "Oracle/SQL Server/PostgreSQL availability, performance, backups, access requests",
+    "example_issues": ["Database connection timeouts", "Query performance degradation", "DB access request"]
+  },
+  {
+    "name": "Identity & Access Management",
+    "description": "AD/Entra ID accounts, SSO, MFA, password resets, access provisioning",
+    "example_issues": ["Account locked out", "MFA device lost", "SSO redirect loop"]
+  },
+  {
+    "name": "Cloud Platform",
+    "description": "Azure/AWS infrastructure, Kubernetes, CI/CD platform, cloud cost and quota issues",
+    "example_issues": ["AKS pod crashloop", "Azure quota exceeded", "Pipeline agent offline"]
+  },
+  {
+    "name": "Security Operations",
+    "description": "Phishing, malware, suspicious activity, data leakage, security incidents",
+    "example_issues": ["Phishing email reported", "Ransomware suspected", "Unusual login activity"]
+  },
+  {
+    "name": "L1 Service Desk",
+    "description": "Fallback queue for unclassified or low-confidence incidents requiring human triage",
+    "example_issues": ["General inquiry", "Unclear issue description"]
+  }
+]
