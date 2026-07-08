@@ -105,19 +105,14 @@ the same method signatures.
 
 ### MCP server (Claude Desktop)
 
-```json
-{
-  "mcpServers": {
-    "incident-copilot": {
-      "command": "python",
-      "args": ["-m", "mcp_server.server"],
-      "cwd": "/path/to/servicenow-incident-copilot"
-    }
-  }
-}
-```
+Copy `integration/claude_desktop_config.example.json` into your Claude Desktop
+config (set the absolute `cwd`). With `"APP_MODE": "mock"` it works with **zero
+credentials** — flip to `live` once the PDI is wired.
 
-Then ask Claude: *"Triage incident INC0010023 and explain why you routed it there."*
+Then ask Claude: *"Triage the incident about the CEO gift card email and explain
+your routing"* or *"What are the routing stats for this session?"*
+
+A full 3-minute recording script lives in `integration/DEMO_SCRIPT.md`.
 
 ### Docker
 

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "incident-copilot": {
+      "command": "python",
+      "args": ["-m", "mcp_server.server"],
+      "cwd": "/absolute/path/to/servicenow-incident-copilot",
+      "env": {
+        "APP_MODE": "mock"
+      }
+    }
+  }
+}
