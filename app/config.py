@@ -27,10 +27,17 @@ class Settings(BaseSettings):
     openai_api_key: str = ""  # fallback
 
     # --- Vector store ---
+    vector_backend: str = "chroma"  # "chroma" | "azure_ai_search" (mock mode forces in-memory)
     chroma_host: str = ""  # empty = embedded/local persistent client
     chroma_persist_dir: str = "./data/chroma"
     kb_collection: str = "company_kb"
     incident_collection: str = "past_incidents"
+
+    # --- Azure AI Search (used when vector_backend=azure_ai_search) ---
+    azure_search_endpoint: str = ""
+    azure_search_api_key: str = ""
+    azure_search_kb_index: str = "company-kb"
+    azure_search_incident_index: str = "past-incidents"
 
     # --- Routing ---
     routing_confidence_threshold: float = 0.7

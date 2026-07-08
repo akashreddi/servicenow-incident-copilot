@@ -20,6 +20,19 @@ def load_groups() -> list[AssignmentGroup]:
     return [AssignmentGroup(**g) for g in json.loads(path.read_text())]
 
 
+def _build_vector_store(settings: Settings, llm):
+    """Select the vector backend by config. Both satisfy the VectorStore protocol."""
+    if settings.vector_backend == "azure_ai_search":
+        from app.services.azure_search_store import AzureAISearchStore
+
+        logger.info("Vector backend: Azure AI Search")
+        return AzureAISearchStore(settings, llm)
+    from app.services.embedding_service import EmbeddingService
+
+    logger.info("Vector backend: ChromaDB")
+    return EmbeddingService(settings, llm)
+
+
 async def build_stack(settings: Settings) -> IncidentService:
     if settings.app_mode == "mock":
         from app.mocks.mock_llm import DeterministicLLM, InMemoryEmbeddings
@@ -34,14 +47,13 @@ async def build_stack(settings: Settings) -> IncidentService:
         for hid, desc, group, resolution in HISTORICAL_INCIDENTS:
             await emb.index_resolved_incident(hid, hid, desc, group, resolution)
     else:
-        from app.services.embedding_service import EmbeddingService
         from app.services.llm import LLMClient
         from app.services.servicenow_client import ServiceNowClient
 
         logger.info("APP_MODE=live — ServiceNow: %s", settings.snow_instance_url)
         llm = LLMClient(settings)
         snow = ServiceNowClient(settings)
-        emb = EmbeddingService(settings, llm)
+        emb = _build_vector_store(settings, llm)
 
     triage = TriageService(llm, load_groups())
     return IncidentService(snow, emb, triage, settings)

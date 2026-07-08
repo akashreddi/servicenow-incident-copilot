@@ -87,6 +87,22 @@ one cid to trace a single incident end to end.
 The `auto_route_rate` and per-group distribution are the metrics you'd watch to
 tune the confidence threshold. Counters map 1:1 onto Prometheus if real scraping
 is needed. 
+### Swappable vector backend
+
+Three implementations satisfy one `VectorStore` protocol (`app/services/vector_store.py`):
+
+| Backend | `VECTOR_BACKEND` | Used for |
+|---|---|---|
+| In-memory (cosine) | *(mock mode)* | zero-credential demo & tests |
+| ChromaDB | `chroma` (default) | local live dev |
+| Azure AI Search | `azure_ai_search` | production (HNSW vector search) |
+
+Switching is one env var — `IncidentService` never changes, because it depends on
+the protocol, not a concrete store. The Azure backend creates its indexes
+idempotently on startup and pushes our own `text-embedding-3-small` vectors, so
+retrieval quality is identical across backends. A test asserts all three expose
+the same method signatures.
+
 ### MCP server (Claude Desktop)
 
 ```json
@@ -123,6 +139,6 @@ policies. The client here is a one-file swap away from pointing at CloudHub.
 
 ## Roadmap
 
-- Azure AI Search backend behind the existing `EmbeddingService` interface
+- ~~Azure AI Search backend~~ ✅ done — see `VECTOR_BACKEND=azure_ai_search`
 - Multi-turn clarification: agent asks the caller for missing details via chat/email
 - Routing accuracy dashboard (auto-routed vs. reassigned rate)

@@ -96,9 +96,21 @@ async def main() -> int:
         show(FAIL, "Chat + function calling", str(e))
         return 1
 
+    # 7. Vector backend
+    if settings.vector_backend == "azure_ai_search":
+        try:
+            from app.services.azure_search_store import AzureAISearchStore
+            AzureAISearchStore(settings, llm)  # constructor ensures indexes exist
+            show(OK, "Azure AI Search", f"endpoint={settings.azure_search_endpoint}")
+        except Exception as e:
+            show(FAIL, "Azure AI Search", f"{e}\n   Check: endpoint/key correct? "
+                 "Search service running? admin key (not query key)?")
+            return 1
+    else:
+        show(OK, "Vector backend", "chroma (local)")
+
     print("\n🚀 All systems go — run: uvicorn app.main:app  (APP_MODE=live)")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
