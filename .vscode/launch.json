@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (mock mode)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "env": { "APP_MODE": "mock" },
+      "jinja": false,
+      "justMyCode": true
+    },
+    {
+      "name": "API (live mode)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": ["app.main:app", "--reload", "--port", "8000"],
+      "envFile": "${workspaceFolder}/.env",
+      "env": { "APP_MODE": "live" }
+    },
+    {
+      "name": "MCP server (mock)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "mcp_server.server",
+      "env": { "APP_MODE": "mock" }
+    },
+    {
+      "name": "Preflight doctor",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "scripts.preflight",
+      "args": ["--fix-groups"],
+      "envFile": "${workspaceFolder}/.env"
+    }
+  ]
+}

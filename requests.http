@@ -1,0 +1,23 @@
+### Health
+GET http://localhost:8000/health
+
+### Run the full demo (triage all unassigned incidents)
+POST http://localhost:8000/demo/run-all
+
+### Routing stats dashboard
+GET http://localhost:8000/stats
+
+### Triage one incident (replace sys_id from demo output)
+POST http://localhost:8000/triage/REPLACE_SYS_ID
+
+### Webhook (what the ServiceNow Business Rule sends)
+POST http://localhost:8000/webhook/incident
+x-webhook-secret: change-me
+Content-Type: application/json
+
+{
+  "sys_id": "REPLACE_SYS_ID",
+  "number": "INC0010099",
+  "short_description": "VPN not working from home",
+  "description": "AnyConnect times out"
+}
