@@ -8,6 +8,10 @@ Zero-touch L1 incident triage: new incidents are automatically classified by Azu
 
 ## Live demo
 
+![Mock-mode demo: six incidents auto-triaged and routed in one call, then the routing dashboard](docs/demo.gif)
+
+_The recording above is the real `APP_MODE=mock` pipeline — deterministic, credential-free, and exactly what CI runs._
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/akashreddi/servicenow-incident-copilot)
 
 Deployed in **mock mode** — the entire pipeline runs offline with a deterministic LLM and an in-memory ServiceNow, so **no credentials are needed** and nothing sensitive is exposed. Once live, open:
