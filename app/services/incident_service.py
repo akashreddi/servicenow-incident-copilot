@@ -8,7 +8,7 @@ and MCP tools. This is the zero-touch L1 pipeline:
 import logging
 
 from app.config import Settings
-from app.models import Incident, RoutingDecision
+from app.models import RoutingDecision
 from app.services.embedding_service import EmbeddingService
 from app.services.servicenow_client import ServiceNowClient
 from app.services.triage_service import TriageService

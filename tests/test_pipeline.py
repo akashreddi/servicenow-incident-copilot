@@ -9,7 +9,7 @@ import pytest
 import respx
 
 from app.config import Settings
-from app.models import AssignmentGroup, Incident, KBHit, SimilarIncident, TriageResult
+from app.models import AssignmentGroup, KBHit, SimilarIncident, TriageResult
 from app.services.incident_service import IncidentService
 from app.services.servicenow_client import ServiceNowClient
 from app.services.triage_service import TriageService
@@ -106,8 +106,6 @@ async def test_oauth_token_is_cached_across_calls():
 def test_triage_guardrail_rejects_unknown_group():
     """LLM hallucinating a team name must zero out confidence."""
     groups = [AssignmentGroup(name="Network Operations", description="nets")]
-    llm = MagicMock()
-    svc = TriageService(llm, groups)
     valid = {g.name for g in groups}
     result = TriageResult(category="Network", priority="3",
                           assignment_group="Made Up Team", confidence=0.99, reasoning="x")

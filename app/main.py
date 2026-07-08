@@ -12,7 +12,7 @@ from pathlib import Path
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.config import Settings, get_settings
+from app.config import get_settings
 from app.models import AssignmentGroup, RoutingDecision, WebhookPayload
 from app.services.embedding_service import EmbeddingService
 from app.services.incident_service import IncidentService
