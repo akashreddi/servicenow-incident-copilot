@@ -6,6 +6,16 @@
 
 Zero-touch L1 incident triage: new incidents are automatically classified by Azure OpenAI, grounded in **company knowledge embeddings**, and routed to the right enterprise team in ServiceNow — no manual effort. Exposed as both a **FastAPI service** and an **MCP server** (connect it to Claude Desktop and triage incidents conversationally).
 
+## Why I built this
+
+I'm drawn to the intersection of **ServiceNow and applied AI**, and I wanted to see what "AI integration" should really look like inside an ITSM platform — not a chatbot bolted onto the side, but AI wired into the operational flow where it removes genuine toil. L1 triage is the ideal target: high-volume, repetitive, and every misroute burns an SLA. So instead of a demo snippet, I built the entire zero-touch loop the way I'd want to run it in production — webhook in, RAG-grounded decision, write-back with an audit note — and pushed on the parts that are easy to hand-wave and hard to get right:
+
+- **It runs with zero credentials.** The offline `APP_MODE=mock` stack implements the *exact same interfaces* as the live one (in-memory ServiceNow + a rule-based LLM double), so the pipeline can't tell the difference — and neither can `pytest`. I wanted anyone to be able to clone it and see it work in 60 seconds, and I wanted CI to exercise the real orchestration, not a stub.
+- **The AI is accountable, not magic.** The model can only route to teams in the catalog; a hallucinated team name zeros the confidence; anything under the threshold parks in a human queue with the full reasoning written to the incident's work note. I care more about *trustworthy* automation than a flashy accuracy number.
+- **It's provider- and infra-agnostic on purpose.** Swapping the LLM (Azure OpenAI ↔ OpenAI) or the vector store (in-memory ↔ ChromaDB ↔ Azure AI Search) is one env var, because everything depends on a protocol, not a concrete class. That's the difference between a proof-of-concept and something a team could actually adopt.
+
+I built it in visible phases (see the commit history) — mock-first, then observability, then a second vector backend, then the MCP surface — because that's how I like to work: get a thin end-to-end slice running, then deepen it one honest layer at a time.
+
 ## How the zero-touch pipeline works
 
 ```
