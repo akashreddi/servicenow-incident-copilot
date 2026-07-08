@@ -9,6 +9,7 @@ import logging
 
 from app.config import Settings
 from app.models import RoutingDecision
+from app.observability import StageTimer, new_correlation_id, stats
 from app.services.embedding_service import EmbeddingService
 from app.services.servicenow_client import ServiceNowClient
 from app.services.triage_service import TriageService
@@ -26,32 +27,42 @@ class IncidentService:
 
     async def process_incident(self, sys_id: str) -> RoutingDecision:
         """End-to-end auto-triage for one incident. Idempotent and audit-logged."""
-        incident = await self._snow.get_incident(sys_id)
-        logger.info("Processing %s: %s", incident.number, incident.short_description)
+        new_correlation_id()  # tags every log line for this incident's journey
+        timer = StageTimer()
+        try:
+            incident = await self._snow.get_incident(sys_id)
+            logger.info("Processing %s: %s", incident.number, incident.short_description)
 
-        # 1. Retrieval — company embeddings ground the decision
-        kb_hits = await self._emb.search_kb(incident.text, k=3)
-        similar = await self._emb.search_similar_incidents(incident.text, k=5)
+            # 1. Retrieval — company embeddings ground the decision
+            with timer.stage("retrieval"):
+                kb_hits = await self._emb.search_kb(incident.text, k=3)
+                similar = await self._emb.search_similar_incidents(incident.text, k=5)
 
-        # 2. LLM triage with forced structured output
-        triage = await self._triage.triage(incident, kb_hits, similar)
+            # 2. LLM triage with forced structured output
+            with timer.stage("triage"):
+                triage = await self._triage.triage(incident, kb_hits, similar)
 
-        # 3. Confidence gate: auto-route or park in fallback L1 queue
-        auto = triage.confidence >= self._s.routing_confidence_threshold
-        target_group = triage.assignment_group if auto else self._s.fallback_assignment_group
+            # 3. Confidence gate: auto-route or park in fallback L1 queue
+            auto = triage.confidence >= self._s.routing_confidence_threshold
+            target_group = triage.assignment_group if auto else self._s.fallback_assignment_group
 
-        # 4. Write back to ServiceNow
-        fields: dict = {
-            "category": triage.category.lower(),
-            "priority": triage.priority.value,
-        }
-        group_sys_id = await self._snow.resolve_group_sys_id(target_group)
-        if group_sys_id:
-            fields["assignment_group"] = group_sys_id
-        await self._snow.update_incident(sys_id, fields)
+            # 4. Write back to ServiceNow
+            with timer.stage("writeback"):
+                fields: dict = {
+                    "category": triage.category.lower(),
+                    "priority": triage.priority.value,
+                }
+                group_sys_id = await self._snow.resolve_group_sys_id(target_group)
+                if group_sys_id:
+                    fields["assignment_group"] = group_sys_id
+                await self._snow.update_incident(sys_id, fields)
 
-        note = self._format_work_note(triage, target_group, auto, similar)
-        await self._snow.add_work_note(sys_id, note)
+                note = self._format_work_note(triage, target_group, auto, similar)
+                await self._snow.add_work_note(sys_id, note)
+        except Exception:
+            stats.record_error()
+            logger.exception("Pipeline failed for %s", sys_id)
+            raise
 
         decision = RoutingDecision(
             incident_sys_id=sys_id,
@@ -62,8 +73,9 @@ class IncidentService:
             routed_to=target_group,
             auto_routed=auto,
         )
-        logger.info("Routed %s -> %s (auto=%s, confidence=%.2f)",
-                    incident.number, target_group, auto, triage.confidence)
+        stats.record(decision, timer.timings_ms)
+        logger.info("Routed %s -> %s (auto=%s, confidence=%.2f, timings_ms=%s)",
+                    incident.number, target_group, auto, triage.confidence, timer.timings_ms)
         return decision
 
     async def learn_from_resolution(self, sys_id: str) -> None:

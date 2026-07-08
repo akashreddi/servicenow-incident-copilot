@@ -65,6 +65,28 @@ Manual demo without the webhook:
 curl -X POST localhost:8000/triage/<sys_id> | jq
 ```
 
+### Observability
+
+Every request gets a correlation ID (honored from an inbound `X-Correlation-ID`
+header — e.g. propagated from MuleSoft — or minted fresh) that tags every log
+line in that incident's journey and is echoed back in the response header. Grep
+one cid to trace a single incident end to end.
+
+`GET /stats` returns a live routing dashboard:
+
+```json
+{
+  "processed": 6, "auto_routed": 6, "auto_route_rate": 1.0,
+  "low_confidence_fallbacks": 0, "avg_confidence": 0.84,
+  "by_group": { "Network Operations": 1, "Security Operations": 1, ... },
+  "by_priority": { "P1": 1, "P2": 3, "P3": 2 },
+  "avg_stage_ms": { "retrieval": 0.6, "triage": 1.0, "writeback": 0.1 }
+}
+```
+
+The `auto_route_rate` and per-group distribution are the metrics you'd watch to
+tune the confidence threshold. Counters map 1:1 onto Prometheus if real scraping
+is needed. 
 ### MCP server (Claude Desktop)
 
 ```json

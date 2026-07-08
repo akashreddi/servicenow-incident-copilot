@@ -7,18 +7,16 @@ full pipeline without blocking ServiceNow's outbound call.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.factory import build_stack
 from app.models import RoutingDecision, WebhookPayload
+from app.observability import correlation_id, new_correlation_id, setup_logging, stats
 from app.services.incident_service import IncidentService
 
-logging.basicConfig(
-    level=get_settings().log_level,
-    format='{"ts":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}',
-)
+setup_logging(get_settings().log_level)
 logger = logging.getLogger(__name__)
 
 
@@ -32,6 +30,24 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="ServiceNow Incident Copilot", version="0.1.0", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def correlation_middleware(request: Request, call_next):
+    """Honor an inbound X-Correlation-ID (e.g. from MuleSoft) or mint a new one,
+    and echo it back so callers can grep their logs against ours."""
+    cid = request.headers.get("x-correlation-id") or new_correlation_id()
+    correlation_id.set(cid)
+    response = await call_next(request)
+    response.headers["x-correlation-id"] = cid
+    return response
+
+
+@app.get("/stats")
+async def get_stats() -> dict:
+    """Routing-accuracy dashboard: auto-route rate, avg confidence, per-team
+    distribution, per-stage latency. Counters map onto Prometheus if needed."""
+    return stats.snapshot()
 
 
 def get_service() -> IncidentService:
