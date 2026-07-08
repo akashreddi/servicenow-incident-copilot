@@ -34,6 +34,20 @@ FastAPI · Pydantic v2 · httpx (async) · OAuth 2.0 · ServiceNow Table API · 
 
 ## Quick start
 
+### 60-second demo, zero credentials (mock mode)
+
+```bash
+pip install -r requirements.txt
+APP_MODE=mock uvicorn app.main:app --port 8000
+curl -X POST localhost:8000/demo/run-all | jq
+```
+
+Six realistic incidents get triaged and routed instantly by a deterministic
+offline stack (in-memory ServiceNow + rule-based LLM double) that implements the
+exact same interfaces as the live one — the pipeline can't tell the difference.
+
+### Live mode (real PDI + Azure OpenAI)
+
 ```bash
 cp .env.example .env          # fill in PDI + OpenAI credentials
 pip install -r requirements.txt -r requirements-dev.txt

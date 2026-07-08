@@ -4,21 +4,16 @@ The /webhook/incident endpoint is what makes this zero-touch: a ServiceNow
 Business Rule (async, on insert) POSTs here, and BackgroundTasks runs the
 full pipeline without blocking ServiceNow's outbound call.
 """
-import json
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.models import AssignmentGroup, RoutingDecision, WebhookPayload
-from app.services.embedding_service import EmbeddingService
+from app.factory import build_stack
+from app.models import RoutingDecision, WebhookPayload
 from app.services.incident_service import IncidentService
-from app.services.llm import LLMClient
-from app.services.servicenow_client import ServiceNowClient
-from app.services.triage_service import TriageService
 
 logging.basicConfig(
     level=get_settings().log_level,
@@ -27,22 +22,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def load_groups() -> list[AssignmentGroup]:
-    path = Path(__file__).parent.parent / "data" / "assignment_groups.json"
-    return [AssignmentGroup(**g) for g in json.loads(path.read_text())]
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
-    llm = LLMClient(settings)
-    snow = ServiceNowClient(settings)
-    embeddings = EmbeddingService(settings, llm)
-    triage = TriageService(llm, load_groups())
-    app.state.incident_service = IncidentService(snow, embeddings, triage, settings)
-    logger.info("Incident Copilot ready")
+    app.state.incident_service = await build_stack(settings)
+    logger.info("Incident Copilot ready (mode=%s)", settings.app_mode)
     yield
-    await snow.aclose()
+    await app.state.incident_service._snow.aclose()
 
 
 app = FastAPI(title="ServiceNow Incident Copilot", version="0.1.0", lifespan=lifespan)
@@ -86,3 +72,25 @@ async def triage_incident(sys_id: str, svc: IncidentService = Depends(get_servic
 async def learn(sys_id: str, svc: IncidentService = Depends(get_service)) -> None:
     """Index a resolved incident into the vector store (feedback loop)."""
     await svc.learn_from_resolution(sys_id)
+
+
+@app.post("/demo/run-all")
+async def demo_run_all(svc: IncidentService = Depends(get_service)) -> list[dict]:
+    """One-call demo: triage every unassigned incident and return the decisions.
+    Works instantly in APP_MODE=mock; in live mode it processes real PDI incidents."""
+    incidents = await svc._snow.list_incidents(query="active=true^assignment_group=NULL", limit=10)
+    results = []
+    for inc in incidents:
+        if inc.assignment_group:
+            continue
+        decision = await svc.process_incident(inc.sys_id)
+        results.append({
+            "incident": decision.incident_number,
+            "short_description": inc.short_description,
+            "routed_to": decision.routed_to,
+            "auto_routed": decision.auto_routed,
+            "confidence": decision.triage.confidence,
+            "priority": decision.triage.priority.value,
+            "top_similar": decision.similar_incidents[0].number if decision.similar_incidents else None,
+        })
+    return results

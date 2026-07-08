@@ -7,6 +7,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    # "live" (real ServiceNow + Azure OpenAI) | "mock" (offline demo, zero credentials)
+    app_mode: str = "live"
+
     # --- ServiceNow ---
     snow_instance_url: str = "https://devXXXXX.service-now.com"
     snow_oauth_client_id: str = ""
