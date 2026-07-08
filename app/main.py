@@ -4,11 +4,11 @@ The /webhook/incident endpoint is what makes this zero-touch: a ServiceNow
 Business Rule (async, on insert) POSTs here, and BackgroundTasks runs the
 full pipeline without blocking ServiceNow's outbound call.
 """
+import hmac
 import logging
 from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
-from fastapi.responses import JSONResponse
 
 from app.config import get_settings
 from app.factory import build_stack
@@ -55,7 +55,8 @@ def get_service() -> IncidentService:
 
 
 def verify_webhook_secret(x_webhook_secret: str = Header(default="")) -> None:
-    if x_webhook_secret != get_settings().webhook_shared_secret:
+    # Constant-time compare so a wrong secret can't be recovered via timing.
+    if not hmac.compare_digest(x_webhook_secret, get_settings().webhook_shared_secret):
         raise HTTPException(status_code=401, detail="Invalid webhook secret")
 
 
@@ -81,7 +82,7 @@ async def triage_incident(sys_id: str, svc: IncidentService = Depends(get_servic
         return await svc.process_incident(sys_id)
     except Exception as exc:  # noqa: BLE001
         logger.exception("Triage failed for %s", sys_id)
-        return JSONResponse(status_code=502, content={"error": str(exc)})
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
 @app.post("/learn/{sys_id}", status_code=204)
