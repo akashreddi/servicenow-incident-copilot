@@ -8,20 +8,20 @@ Zero-touch L1 incident triage: new incidents are automatically classified by Azu
 
 ## Live demo
 
+**▶ Live app: <https://servicenow-incident-copilot.onrender.com/docs>** — interactive API docs (free tier; first load may take ~50s if asleep, then it's instant)
+
 ![Mock-mode demo: six incidents auto-triaged and routed in one call, then the routing dashboard](docs/demo.gif)
 
 _The recording above is the real `APP_MODE=mock` pipeline — deterministic, credential-free, and exactly what CI runs._
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/akashreddi/servicenow-incident-copilot)
 
-Deployed in **mock mode** — the entire pipeline runs offline with a deterministic LLM and an in-memory ServiceNow, so **no credentials are needed** and nothing sensitive is exposed. Once live, open:
+Deployed in **mock mode** — the entire pipeline runs offline with a deterministic LLM and an in-memory ServiceNow, so **no credentials are needed** and nothing sensitive is exposed. Try it:
 
-- **`/docs`** — interactive Swagger UI; hit **"Try it out"** on any endpoint
-- **`POST /demo/run-all`** — triages six realistic incidents and returns the routing decisions
-- **`GET /stats`** — the live routing-accuracy dashboard
+- [**`/docs`**](https://servicenow-incident-copilot.onrender.com/docs) — interactive Swagger UI; click **"Try it out"** on `POST /demo/run-all` to auto-triage six incidents
+- [**`/stats`**](https://servicenow-incident-copilot.onrender.com/stats) — live routing-accuracy dashboard (JSON)
 
-> _Live URL: add it here once deployed, e.g._ `https://servicenow-incident-copilot.onrender.com/docs`
-> Render's free tier sleeps after inactivity, so the first request may take ~50s to wake.
+> Hosted on Render's free tier, which sleeps after inactivity — the first request may take ~50s to wake, then it's instant. The GIF above is the same output with no wait.
 
 ## Why I built this
 
