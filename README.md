@@ -1,5 +1,9 @@
 # ServiceNow Incident Copilot
 
+[![CI](https://github.com/akashreddi/servicenow-incident-copilot/actions/workflows/ci.yml/badge.svg)](https://github.com/akashreddi/servicenow-incident-copilot/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![Code style: ruff](https://img.shields.io/badge/lint-ruff-261230.svg)](https://github.com/astral-sh/ruff)
+
 Zero-touch L1 incident triage: new incidents are automatically classified by Azure OpenAI, grounded in **company knowledge embeddings**, and routed to the right enterprise team in ServiceNow — no manual effort. Exposed as both a **FastAPI service** and an **MCP server** (connect it to Claude Desktop and triage incidents conversationally).
 
 ## How the zero-touch pipeline works
@@ -86,7 +90,8 @@ one cid to trace a single incident end to end.
 
 The `auto_route_rate` and per-group distribution are the metrics you'd watch to
 tune the confidence threshold. Counters map 1:1 onto Prometheus if real scraping
-is needed. 
+is needed.
+
 ### Swappable vector backend
 
 Three implementations satisfy one `VectorStore` protocol (`app/services/vector_store.py`):
