@@ -1,0 +1,13 @@
+# Render Blueprint — deploys the credential-free mock demo.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: servicenow-incident-copilot
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      # Runs the full pipeline offline with a deterministic LLM + in-memory
+      # ServiceNow — no ServiceNow / OpenAI credentials required.
+      - key: APP_MODE
+        value: mock

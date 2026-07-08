@@ -6,6 +6,19 @@
 
 Zero-touch L1 incident triage: new incidents are automatically classified by Azure OpenAI, grounded in **company knowledge embeddings**, and routed to the right enterprise team in ServiceNow — no manual effort. Exposed as both a **FastAPI service** and an **MCP server** (connect it to Claude Desktop and triage incidents conversationally).
 
+## Live demo
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/akashreddi/servicenow-incident-copilot)
+
+Deployed in **mock mode** — the entire pipeline runs offline with a deterministic LLM and an in-memory ServiceNow, so **no credentials are needed** and nothing sensitive is exposed. Once live, open:
+
+- **`/docs`** — interactive Swagger UI; hit **"Try it out"** on any endpoint
+- **`POST /demo/run-all`** — triages six realistic incidents and returns the routing decisions
+- **`GET /stats`** — the live routing-accuracy dashboard
+
+> _Live URL: add it here once deployed, e.g._ `https://servicenow-incident-copilot.onrender.com/docs`
+> Render's free tier sleeps after inactivity, so the first request may take ~50s to wake.
+
 ## Why I built this
 
 I'm drawn to the intersection of **ServiceNow and applied AI**, and I wanted to see what "AI integration" should really look like inside an ITSM platform — not a chatbot bolted onto the side, but AI wired into the operational flow where it removes genuine toil. L1 triage is the ideal target: high-volume, repetitive, and every misroute burns an SLA. So instead of a demo snippet, I built the entire zero-touch loop the way I'd want to run it in production — webhook in, RAG-grounded decision, write-back with an audit note — and pushed on the parts that are easy to hand-wave and hard to get right:
